@@ -1,0 +1,26 @@
+export default {
+  exportList: 'Export Orders',
+  importList: 'Import Orders',
+  products: 'Products',
+  userManagement: 'User Management',
+  logout: 'Logout',
+  login: 'Login',
+  username: 'Username',
+  password: 'Password',
+  loginEmptyError: 'Username and password cannot be empty',
+  loginNetworkError: 'Network error, please try again',
+  addRow: 'Add Row',
+  deleteSelected: 'Delete Selected',
+  name: 'Name',
+  dept: 'Department',
+  salary: 'Salary',
+  date: 'Hire Date',
+  index: 'Index',
+  total: 'Total Salary',
+  depts: {
+    rd: 'R&D',
+    product: 'Product',
+    operation: 'Operations',
+    marketing: 'Marketing',
+  }
+}

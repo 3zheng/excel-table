@@ -1,0 +1,26 @@
+export default {
+  exportList: '出口表单',
+  importList: '进口表单',
+  products: '产品属性',
+  userManagement: '用户管理',
+  logout: '退出登录',
+  login: '登录',
+  username: '用户名',
+  password: '密码',
+  loginEmptyError: '用户名和密码不能为空',
+  loginNetworkError: '网络错误，请重试',
+  addRow: '新增行',
+  deleteSelected: '删除选中',
+  name: '姓名',
+  dept: '部门',
+  salary: '薪资',
+  date: '入职日期',
+  index: '序号',
+  total: '合计薪资',
+  depts: {
+    rd: '研发',
+    product: '产品',
+    operation: '运营',
+    marketing: '市场',
+  }
+}

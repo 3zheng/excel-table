@@ -1,0 +1,18 @@
+# 环境变量（含数据库密码和JWT密钥，绝对不能提交）
+.env
+
+# 前端依赖和构建产物
+excel-table-app/node_modules/
+excel-table-app/dist/
+
+# Go 编译产物
+excel-table-backend/*.exe
+excel-table-backend/main
+
+# 系统文件
+.DS_Store
+Thumbs.db
+
+# 测试文件和日志
+*.test
+*.log

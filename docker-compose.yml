@@ -1,0 +1,48 @@
+services:
+  frontend:
+    build:
+      context: ./excel-table-app
+      dockerfile: Dockerfile
+    container_name: excel-table-frontend
+    ports:
+      - "8080:80"
+    restart: unless-stopped
+    depends_on:
+      - backend
+    environment:
+      - TZ=Asia/Shanghai
+
+  backend:
+    build:
+      context: ./excel-table-backend
+      dockerfile: Dockerfile
+    container_name: excel-table-backend
+    ports:
+      - "9000:9000"
+    restart: unless-stopped
+    depends_on:
+      - db
+    environment:
+      - TZ=Asia/Shanghai #修改docker的时区，使之和北京时间一致
+      - DB_HOST=db
+      - DB_PORT=3306
+      - DB_USER=root
+      - DB_PASSWORD=${DB_PASSWORD}
+      - DB_NAME=excel_table
+
+  db:
+    image: mariadb:11
+    container_name: excel-table-db
+    ports: 
+      - "3307:3306"
+    restart: unless-stopped
+    environment:
+      - TZ=Asia/Shanghai
+      - MARIADB_ROOT_PASSWORD=${DB_PASSWORD}
+      - MARIADB_DATABASE=excel_table
+    volumes:
+      - db_data:/var/lib/mysql
+      - ./excel-table-backend/init.sql:/docker-entrypoint-initdb.d/init.sql
+
+volumes:
+  db_data:

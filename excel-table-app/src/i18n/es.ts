@@ -1,0 +1,26 @@
+export default {
+  exportList: 'Órdenes de Exportación',
+  importList: 'Órdenes de Importación',
+  products: 'Productos',
+  userManagement: 'Gestión de Usuarios',
+  logout: 'Cerrar Sesión',
+  login: 'Iniciar sesión',
+  username: 'Usuario',
+  password: 'Contraseña',
+  loginEmptyError: 'El usuario y la contraseña no pueden estar vacíos',
+  loginNetworkError: 'Error de red, por favor intente de nuevo',
+  addRow: 'Agregar fila',
+  deleteSelected: 'Eliminar seleccionados',
+  name: 'Nombre',
+  dept: 'Departamento',
+  salary: 'Salario',
+  date: 'Fecha de ingreso',
+  index: 'Índice',
+  total: 'Salario total',
+  depts: {
+    rd: 'Desarrollo',
+    product: 'Producto',
+    operation: 'Operaciones',
+    marketing: 'Marketing',
+  }
+}

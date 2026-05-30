@@ -1,0 +1,5 @@
+docker pull node:20-alpine
+docker pull nginx:alpine
+docker pull golang:1.25-alpine
+docker pull alpine:latest
+docker pull mariadb:11
