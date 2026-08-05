@@ -7,6 +7,7 @@ import (
 	"os"
 	"time"
 
+	"github.com/3zheng/logger"
 	"github.com/gin-gonic/gin"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/golang-jwt/jwt/v5"
@@ -15,6 +16,7 @@ import (
 
 var db *sql.DB
 var jwtSecret []byte
+var debugMode bool
 
 type User struct {
 	ID              int    `json:"id"`
@@ -29,6 +31,23 @@ type Claims struct {
 	UserRole        string `json:"user_role"`
 	CanEditProducts bool   `json:"can_edit_products"`
 	jwt.RegisteredClaims
+}
+
+func init() {
+	fmt.Println("进入init")
+	if os.Getenv("MODE") == "debug" {
+		debugMode = true
+		fmt.Println("启动DEBUG模式")
+	} else {
+		debugMode = false
+		fmt.Println("未启动DEBUG模式")
+	}
+}
+
+func debugPrintf(format string, args ...any) {
+	if debugMode {
+		fmt.Printf("[DEBUG] "+format+"\n", args...)
+	}
 }
 
 func initDB() {
@@ -62,6 +81,7 @@ func authMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		tokenStr := c.GetHeader("Authorization")
 		if tokenStr == "" {
+			logger.Info("%d:未登录", http.StatusUnauthorized)
 			c.JSON(http.StatusUnauthorized, gin.H{"error": "未登录"})
 			c.Abort()
 			return
@@ -74,6 +94,7 @@ func authMiddleware() gin.HandlerFunc {
 			return jwtSecret, nil
 		})
 		if err != nil || !token.Valid {
+			logger.Info("%d:token无效或已过期", http.StatusUnauthorized)
 			c.JSON(http.StatusUnauthorized, gin.H{"error": "token无效或已过期"})
 			c.Abort()
 			return
@@ -141,7 +162,12 @@ func handleLogin(c *gin.Context) {
 }
 
 func main() {
+	fmt.Println("进入main")
 	//HashOutput()
+	logger.InitLog(logger.Config{
+		DebugMode: os.Getenv("MODE") == "debug",
+		LogDir:    "logs",
+	})
 	initDB()
 	jwtSecret = []byte(os.Getenv("JWT_SECRET"))
 

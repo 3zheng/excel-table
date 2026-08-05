@@ -16,3 +16,11 @@ Thumbs.db
 # 测试文件和日志
 *.test
 *.log
+
+# 环境变量脚本（包含密码）
+debug-order.ps1
+debug-order.txt
+
+# PowerShell 脚本备份
+*.ps1
+*.bak

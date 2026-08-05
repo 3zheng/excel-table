@@ -37,12 +37,18 @@ const router = createRouter({
         {
           path: 'users',
           name: 'users',
+          meta: { requiresAdmin: true },
           component: () => import('../views/UsersView.vue'),
         },
         {
           path: 'export/:inv_no',
           name: 'export-detail',
           component: () => import('../views/ExportDetailView.vue'),
+        },
+        {
+          path: 'import/:inv_no',
+          name: 'import-detail',
+          component: () => import('../views/ImportDetailView.vue'),
         },
       ],
     },
@@ -55,6 +61,16 @@ router.beforeEach((to, from) => {
     return '/login'
   } else if (to.path === '/login' && token) {
     return '/'
+  }
+  if (to.meta.requiresAdmin) {
+    try {
+      const user = JSON.parse(localStorage.getItem('user') || '{}')
+      if (user.user_role !== 'admin') {
+        return '/export'
+      }
+    } catch {
+      return '/export'
+    }
   }
 })
 

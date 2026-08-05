@@ -19,6 +19,28 @@ func setupRoutes(r *gin.Engine) {
 		api.POST("/invoices/export", handleExportCreate)
 		api.PUT("/invoices/export/:inv_no", handleExportUpdate)
 		api.DELETE("/invoices/export/:inv_no", handleExportDelete)
+
+		// 进口表单
+		api.GET("/invoices/import", handleImportList)
+		api.GET("/invoices/import/:inv_no", handleImportDetail)
+		api.POST("/invoices/import", handleImportCreate)
+		api.PUT("/invoices/import/:inv_no", handleImportUpdate)
+		api.DELETE("/invoices/import/:inv_no", handleImportDelete)
+
+		// 产品属性
+		api.GET("/products", handleProductList)
+		api.GET("/products/:model_no", handleProductDetail)
+		api.POST("/products", handleProductCreate)
+		api.PUT("/products/:model_no", handleProductUpdate)
+		api.DELETE("/products/:model_no", handleProductDelete)
+		api.POST("/products/copy-prices", handleProductCopy)
+		api.GET("/regions", handleRegionList)
+
+		// 用户管理（仅管理员）
+		api.GET("/users", handleUserList)
+		api.POST("/users", handleUserCreate)
+		api.PUT("/users/:id", handleUserUpdate)
+		api.DELETE("/users/:id", handleUserDelete)
 	}
 }
 func handleMe(c *gin.Context) {
@@ -28,66 +50,4 @@ func handleMe(c *gin.Context) {
 		"user_role":         c.GetString("user_role"),
 		"can_edit_products": c.GetBool("can_edit_products"),
 	})
-}
-
-func handleExportList(c *gin.Context) {
-	userRole := c.GetString("user_role")
-	invNo := c.Query("inv_no")
-	startDate := c.Query("start_date")
-	endDate := c.Query("end_date")
-
-	if userRole != "admin" && userRole != "export_input" && userRole != "export_review" {
-		c.JSON(http.StatusForbidden, gin.H{"error": "无权限"})
-		return
-	}
-
-	query := `SELECT id, inv_no, invoice_date, contract_no, 
-			  shipping_line, reviewed, reviewer, created_at 
-			  FROM invoices WHERE invoice_type = 'export'`
-	args := []interface{}{}
-
-	if invNo != "" {
-		query += " AND inv_no LIKE ?"
-		args = append(args, "%"+invNo+"%")
-	}
-	if startDate != "" {
-		query += " AND invoice_date >= ?"
-		args = append(args, startDate)
-	}
-	if endDate != "" {
-		query += " AND invoice_date <= ?"
-		args = append(args, endDate)
-	}
-
-	query += " ORDER BY created_at DESC"
-
-	rows, err := db.Query(query, args...)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-		return
-	}
-	defer rows.Close()
-
-	type InvoiceSummary struct {
-		ID           int     `json:"id"`
-		InvNo        string  `json:"inv_no"`
-		InvoiceDate  *string `json:"invoice_date"`
-		ContractNo   *string `json:"contract_no"`
-		ShippingLine *string `json:"shipping_line"`
-		Reviewed     bool    `json:"reviewed"`
-		Reviewer     *string `json:"reviewer"`
-		CreatedAt    string  `json:"created_at"`
-	}
-
-	var result []InvoiceSummary
-	for rows.Next() {
-		var inv InvoiceSummary
-		rows.Scan(&inv.ID, &inv.InvNo, &inv.InvoiceDate, &inv.ContractNo,
-			&inv.ShippingLine, &inv.Reviewed, &inv.Reviewer, &inv.CreatedAt)
-		result = append(result, inv)
-	}
-	if result == nil {
-		result = []InvoiceSummary{}
-	}
-	c.JSON(http.StatusOK, result)
 }

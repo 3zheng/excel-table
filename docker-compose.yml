@@ -5,7 +5,7 @@ services:
       dockerfile: Dockerfile
     container_name: excel-table-frontend
     ports:
-      - "8080:80"
+      - "8888:80"   # 8080 在 Windows Hyper-V 保留范围 8044-8143 内，无法绑定
     restart: unless-stopped
     depends_on:
       - backend

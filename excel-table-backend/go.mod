@@ -2,7 +2,9 @@ module excel-table-backend
 
 go 1.25.0
 
+replace github.com/3zheng/logger => ./logger
 require (
+	github.com/3zheng/logger v0.1.0 // indirect
 	filippo.io/edwards25519 v1.2.0 // indirect
 	github.com/bytedance/gopkg v0.1.3 // indirect
 	github.com/bytedance/sonic v1.15.0 // indirect
