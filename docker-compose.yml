@@ -28,6 +28,7 @@ services:
       - DB_PORT=3306
       - DB_USER=root
       - DB_PASSWORD=${DB_PASSWORD}
+	  - JWT_SECRET=${JWT_SECRET}
       - DB_NAME=excel_table
 
   db:
