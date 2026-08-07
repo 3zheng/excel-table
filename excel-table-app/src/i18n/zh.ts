@@ -113,7 +113,7 @@ export default {
   chile: '智利',
   spain: '西班牙',
   usa: '美国',
-// ProductsView
+  // ProductsView
   newProduct: '新增产品',
   editProduct: '编辑产品',
   exportRefPrice: '出口参考价',
@@ -132,6 +132,7 @@ export default {
   // UsersView
   newUser: '新增用户',
   editUser: '编辑用户',
+  editPassword: '修改密码',
   userRole: '用户角色',
   canEditProducts: '可编辑产品',
   searchUsername: '搜索用户名',
@@ -143,10 +144,10 @@ export default {
   deleteUserConfirm: '确定删除用户「{name}」吗？',
   yes: '是',
   no: '否',
-  southAmerica: '南美',
   roleAdmin: '管理员',
   roleExportInput: '出口录入',
   roleExportReview: '出口审核',
   roleImportInput: '进口录入',
   roleImportReview: '进口审核',
+  readonly: '只读',
 }

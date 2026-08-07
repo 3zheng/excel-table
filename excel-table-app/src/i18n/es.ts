@@ -113,7 +113,7 @@ export default {
   chile: 'Chile',
   spain: 'España',
   usa: 'EE. UU.',
-// ProductsView
+  // ProductsView
   newProduct: 'Nuevo Producto',
   editProduct: 'Editar Producto',
   exportRefPrice: 'Precio ref. exportación',
@@ -132,6 +132,7 @@ export default {
   // UsersView
   newUser: 'Nuevo usuario',
   editUser: 'Editar usuario',
+  editPassword: 'Cambiar contraseña',
   userRole: 'Rol',
   canEditProducts: 'Puede editar productos',
   searchUsername: 'Buscar usuario',
@@ -143,10 +144,10 @@ export default {
   deleteUserConfirm: '¿Eliminar al usuario "{name}"?',
   yes: 'Sí',
   no: 'No',
-  southAmerica: 'Sudamérica',
   roleAdmin: 'Administrador',
   roleExportInput: 'Entrada exportación',
   roleExportReview: 'Revisión exportación',
   roleImportInput: 'Entrada importación',
   roleImportReview: 'Revisión importación',
+  readonly: 'Solo lectura',
 }

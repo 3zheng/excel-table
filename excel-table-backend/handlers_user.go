@@ -65,15 +65,31 @@ func loadUserRegions(userID int) ([]string, error) {
 	return getUserRegions(userID)
 }
 
+func getUserRoleByID(userID int) (string, error) {
+	var role string
+	err := db.QueryRow("SELECT user_role FROM users WHERE id = ?", userID).Scan(&role)
+	return role, err
+}
+
 func handleUserList(c *gin.Context) {
-	if !requireAdmin(c) {
-		return
+	currentRole := c.GetString("user_role")
+	currentID := c.GetInt("user_id")
+
+	var rows *sql.Rows
+	var err error
+
+	if currentRole == "admin" {
+		rows, err = db.Query(`
+			SELECT id, username, user_role, can_edit_products, created_at
+			FROM users ORDER BY id
+		`)
+	} else {
+		rows, err = db.Query(`
+			SELECT id, username, user_role, can_edit_products, created_at
+			FROM users WHERE id = ?
+		`, currentID)
 	}
 
-	rows, err := db.Query(`
-		SELECT id, username, user_role, can_edit_products, created_at
-		FROM users ORDER BY id
-	`)
 	if err != nil {
 		logger.Error("handleUserList 查询失败", "err", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
@@ -129,6 +145,11 @@ func handleUserCreate(c *gin.Context) {
 	}
 	if !validUserRoles[req.UserRole] {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "无效的用户角色"})
+		return
+	}
+	// 禁止创建管理员
+	if req.UserRole == "admin" {
+		c.JSON(http.StatusForbidden, gin.H{"error": "不允许创建管理员账号"})
 		return
 	}
 	if isImportRole(req.UserRole) && len(req.Regions) == 0 {
@@ -187,14 +208,38 @@ func handleUserCreate(c *gin.Context) {
 }
 
 func handleUserUpdate(c *gin.Context) {
-	if !requireAdmin(c) {
-		return
-	}
+	currentRole := c.GetString("user_role")
+	currentID := c.GetInt("user_id")
 
 	userID, err := strconv.Atoi(c.Param("id"))
 	if err != nil || userID <= 0 {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "无效的用户 ID"})
 		return
+	}
+
+	targetRole, err := getUserRoleByID(userID)
+	if err == sql.ErrNoRows {
+		c.JSON(http.StatusNotFound, gin.H{"error": "用户不存在"})
+		return
+	}
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	// ========== 权限校验 ==========
+	if currentRole == "admin" {
+		// 管理员不能修改其他管理员
+		if targetRole == "admin" && userID != currentID {
+			c.JSON(http.StatusForbidden, gin.H{"error": "不能修改其他管理员账号"})
+			return
+		}
+	} else {
+		// 非管理员只能修改自己
+		if userID != currentID {
+			c.JSON(http.StatusForbidden, gin.H{"error": "只能修改自己的信息"})
+			return
+		}
 	}
 
 	var req struct {
@@ -209,29 +254,46 @@ func handleUserUpdate(c *gin.Context) {
 		return
 	}
 
-	req.Username = strings.TrimSpace(req.Username)
-	if req.Username == "" {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "用户名不能为空"})
-		return
-	}
-	if !validUserRoles[req.UserRole] {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "无效的用户角色"})
-		return
-	}
-	if isImportRole(req.UserRole) && len(req.Regions) == 0 {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "进口类用户至少分配一个地区"})
-		return
-	}
+	// ---------- 非管理员：只允许改密码 ----------
+	if currentRole != "admin" {
+		if req.Password == "" {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "请输入新密码"})
+			return
+		}
+		// 强制保持原有信息
+		var oldUsername string
+		var oldCanEdit bool
+		_ = db.QueryRow("SELECT username, can_edit_products FROM users WHERE id = ?", userID).
+			Scan(&oldUsername, &oldCanEdit)
+		req.Username = oldUsername
+		req.UserRole = targetRole
+		req.CanEditProducts = oldCanEdit
+	} else {
+		// ---------- 管理员 ----------
+		req.Username = strings.TrimSpace(req.Username)
+		if req.Username == "" {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "用户名不能为空"})
+			return
+		}
 
-	var exists int
-	err = db.QueryRow("SELECT 1 FROM users WHERE id = ?", userID).Scan(&exists)
-	if err == sql.ErrNoRows {
-		c.JSON(http.StatusNotFound, gin.H{"error": "用户不存在"})
-		return
-	}
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-		return
+		// 编辑自己时：角色强制锁定为 admin
+		if userID == currentID {
+			req.UserRole = "admin"
+		} else {
+			// 编辑别人时不允许设为管理员
+			if req.UserRole == "admin" {
+				c.JSON(http.StatusForbidden, gin.H{"error": "不允许将其他用户设置为管理员"})
+				return
+			}
+			if !validUserRoles[req.UserRole] {
+				c.JSON(http.StatusBadRequest, gin.H{"error": "无效的用户角色"})
+				return
+			}
+			if isImportRole(req.UserRole) && len(req.Regions) == 0 {
+				c.JSON(http.StatusBadRequest, gin.H{"error": "进口类用户至少分配一个地区"})
+				return
+			}
+		}
 	}
 
 	tx, err := db.Begin()
@@ -266,10 +328,14 @@ func handleUserUpdate(c *gin.Context) {
 		return
 	}
 
-	if err := syncUserRegions(tx, userID, req.UserRole, req.Regions); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-		return
+	// 只有管理员修改非自己时才同步地区；自己或非管理员不碰地区
+	if currentRole == "admin" && userID != currentID {
+		if err := syncUserRegions(tx, userID, req.UserRole, req.Regions); err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			return
+		}
 	}
+
 	if err := tx.Commit(); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -304,6 +370,20 @@ func handleUserDelete(c *gin.Context) {
 
 	if userID == c.GetInt("user_id") {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "不能删除当前登录用户"})
+		return
+	}
+
+	targetRole, err := getUserRoleByID(userID)
+	if err == sql.ErrNoRows {
+		c.JSON(http.StatusNotFound, gin.H{"error": "用户不存在"})
+		return
+	}
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	if targetRole == "admin" {
+		c.JSON(http.StatusForbidden, gin.H{"error": "不能删除管理员账号"})
 		return
 	}
 
