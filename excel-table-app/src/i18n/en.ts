@@ -80,6 +80,9 @@ export default {
   grossWeight: 'Gross Weight',
   netWeight: 'Net Weight',
   volume: 'CBM',
+  qtyPerCarton: 'Qty/Carton',
+  manualEdit: 'Manual Edit',
+  restoreAuto: 'Auto Calc',
 
   // ImportListView + ImportDetailView
   region: 'Region',

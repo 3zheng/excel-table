@@ -79,6 +79,9 @@ export default {
   grossWeight: '毛重',
   netWeight: '净重',
   volume: 'CBM',
+  qtyPerCarton: '每箱货物数',
+  manualEdit: '手动编辑',
+  restoreAuto: '恢复自动',
 
   // ImportListView + ImportDetailView
   region: '地区',

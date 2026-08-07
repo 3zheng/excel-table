@@ -79,6 +79,9 @@ export default {
   grossWeight: 'Peso bruto',
   netWeight: 'Peso neto',
   volume: 'CBM',
+  qtyPerCarton: 'Cant./Caja',
+  manualEdit: 'Edición manual',
+  restoreAuto: 'Cálculo auto',
 
   // ImportListView + ImportDetailView
   region: 'Región',

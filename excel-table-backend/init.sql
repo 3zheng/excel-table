@@ -81,6 +81,7 @@ CREATE TABLE IF NOT EXISTS invoice_items (
     commodities VARCHAR(255),
     model_no VARCHAR(100),
     carton_qty INT,
+    qty_per_carton INT,                    -- 新增：每箱货物数
     unit_qty INT,
     unit VARCHAR(20),
     descriptions VARCHAR(255),

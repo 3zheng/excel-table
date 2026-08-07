@@ -1,4 +1,3 @@
-
 <template>
   <div>
     <!-- 顶部操作栏 -->
@@ -37,7 +36,8 @@
           </el-col>
           <el-col :span="8">
             <el-form-item :label="t('invoiceDate')">
-              <el-date-picker v-model="invoice.invoice_date" type="date" value-format="YYYY-MM-DD" style="width:100%" />
+              <el-date-picker v-model="invoice.invoice_date" type="date" value-format="YYYY-MM-DD" style="width:100%"
+                @change="onDateChange" @visible-change="(v: any) => console.log('[日期排查] 面板开关:', v)" />
             </el-form-item>
           </el-col>
           <el-col :span="8">
@@ -167,16 +167,25 @@
             <el-input v-model="row.descriptions" size="small" :disabled="!canEdit" />
           </template>
         </el-table-column>
+        <!-- 箱数 -->
         <el-table-column :label="t('cartonQty')" prop="carton_qty" width="90">
-          <template #default="{ row }">
+          <template #default="{ row, $index }">
             <el-input-number v-model="row.carton_qty" size="small" :min="0" style="width:100%" :disabled="!canEdit"
-              :controls="false" />
+              :controls="false" @change="onQtyChange(row, $index)" />
           </template>
         </el-table-column>
-        <el-table-column :label="t('unitQty')" prop="unit_qty" width="90">
-          <template #default="{ row }">
-            <el-input-number v-model="row.unit_qty" size="small" :min="0" style="width:100%" :disabled="!canEdit"
-              :controls="false" />
+        <!-- 每箱货物数（新增） -->
+        <el-table-column :label="t('qtyPerCarton')" prop="qty_per_carton" width="100">
+          <template #default="{ row, $index }">
+            <el-input-number v-model="row.qty_per_carton" size="small" :min="0" style="width:100%" :disabled="!canEdit"
+              :controls="false" @change="onQtyChange(row, $index)" />
+          </template>
+        </el-table-column>
+        <!-- 总货物量（受手动覆盖控制） -->
+        <el-table-column :label="t('unitQty')" prop="unit_qty" width="100">
+          <template #default="{ row, $index }">
+            <el-input-number v-model="row.unit_qty" size="small" :min="0" style="width:100%"
+              :disabled="!canEdit || !manualOverride[$index]" :controls="false" />
           </template>
         </el-table-column>
         <el-table-column :label="t('unit')" prop="unit" width="80">
@@ -184,16 +193,18 @@
             <el-input v-model="row.unit" size="small" :disabled="!canEdit" />
           </template>
         </el-table-column>
+        <!-- 单价 -->
         <el-table-column :label="t('unitPrice')" prop="export_unit_price" width="100">
-          <template #default="{ row }">
+          <template #default="{ row, $index }">
             <el-input-number v-model="row.export_unit_price" size="small" :min="0" :precision="3" style="width:100%"
-              :disabled="!canEdit" :controls="false" />
+              :disabled="!canEdit" :controls="false" @change="onQtyChange(row, $index)" />
           </template>
         </el-table-column>
+        <!-- 总金额（受手动覆盖控制） -->
         <el-table-column :label="t('totalAmount')" prop="total_amount" width="100">
-          <template #default="{ row }">
+          <template #default="{ row, $index }">
             <el-input-number v-model="row.total_amount" size="small" :min="0" :precision="2" style="width:100%"
-              :disabled="!canEdit" :controls="false" />
+              :disabled="!canEdit || !manualOverride[$index]" :controls="false" />
           </template>
         </el-table-column>
         <el-table-column :label="t('grossWeight')" prop="gross_weight" width="90">
@@ -221,9 +232,15 @@
             <span v-else>—</span>
           </template>
         </el-table-column>
-        <el-table-column :label="t('operation')" fixed="right" width="80" v-if="canEdit">
+        <el-table-column :label="t('operation')" fixed="right" width="160" v-if="canEdit">
           <template #default="{ $index }">
-            <el-button size="small" type="danger" @click="removeItem($index)">{{ t('delete') }}</el-button>
+            <el-button size="small" :type="manualOverride[$index] ? 'warning' : 'primary'" link
+              @click="toggleOverride($index)">
+              {{ manualOverride[$index] ? t('restoreAuto') : t('manualEdit') }}
+            </el-button>
+            <el-button size="small" type="danger" link @click="removeItem($index)">
+              {{ t('delete') }}
+            </el-button>
           </template>
         </el-table-column>
       </el-table>
@@ -291,6 +308,43 @@ const invoice = ref({
   items: [] as any[],
 })
 
+function onDateChange(val: string | null) {
+  console.log('[日期排查] date-picker @change 收到:', val, '类型:', typeof val)
+  console.log('[日期排查] 当前 invoice.invoice_date:', invoice.value.invoice_date)
+}
+
+// 记录哪些行开启了手动覆盖（key 为行索引）
+const manualOverride = ref<Record<number, boolean>>({})
+
+const toggleOverride = (index: number) => {
+  const next = !manualOverride.value[index]
+  manualOverride.value[index] = next
+
+  // 从手动切回自动时，立刻重新计算一次
+  if (!next) {
+    const row = invoice.value.items[index]
+    if (row) calcItem(row)
+  }
+}
+
+const calcItem = (row: any) => {
+  const carton = Number(row.carton_qty) || 0
+  const perCarton = Number(row.qty_per_carton) || 0
+  const price = Number(row.export_unit_price) || 0
+
+  row.unit_qty = carton * perCarton
+  row.total_amount = +(row.unit_qty * price).toFixed(2)
+}
+
+const onQtyChange = (row: any, index: number) => {
+  // 只有未开启手动覆盖时才自动算
+  if (!manualOverride.value[index]) {
+    calcItem(row)
+  }
+}
+
+
+
 const fobTotal = computed(() =>
   invoice.value.items.reduce((sum, item) => sum + (item.total_amount || 0), 0)
 )
@@ -322,14 +376,27 @@ const getRowClass = ({ row }: { row: any }) => {
 const addItem = () => {
   invoice.value.items.push({
     brand: '', commodities: '', model_no: '', descriptions: '',
-    carton_qty: 0, unit_qty: 0, unit: '', export_unit_price: 0,
-    total_amount: 0, gross_weight: 0, net_weight: 0, volume: 0,
+    carton_qty: 0, qty_per_carton: 0, unit_qty: 0, unit: '',
+    export_unit_price: 0, total_amount: 0,
+    gross_weight: 0, net_weight: 0, volume: 0,
   })
 }
 
 const removeItem = (index: number) => {
   invoice.value.items.splice(index, 1)
+
+  // 同步调整 manualOverride 的索引
+  const newMap: Record<number, boolean> = {}
+  Object.keys(manualOverride.value).forEach((k) => {
+    const i = Number(k)
+    const val = manualOverride.value[i]
+    if (val === undefined) return // 跳过不存在的 key
+    if (i < index) newMap[i] = val
+    else if (i > index) newMap[i - 1] = val
+  })
+  manualOverride.value = newMap
 }
+
 
 const saveInvoice = async () => {
   saving.value = true
@@ -454,6 +521,7 @@ onMounted(async () => {
 :deep(.row-alert-red) {
   background-color: #fef0f0 !important;
 }
+
 .action-bar {
   display: flex;
   justify-content: space-between;
@@ -490,6 +558,7 @@ onMounted(async () => {
   width: 340px !important;
   font-size: 16px !important;
 }
+
 .notification-large .el-notification__title {
   font-size: 18px !important;
   font-weight: 600 !important;
