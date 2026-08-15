@@ -93,11 +93,13 @@ export default {
   cifPrice: 'CIF Price',
   cifTotal: 'CIF Total',
   cifBsTotal: 'CIF Local Currency Total',
-  importDutyVat: 'Import Duty / VAT',
+  importDuty: 'Import Duty',
+  vat: 'VAT',
   transportation: 'Local Transportation',
   othersCharge: 'Other Charges',
   totalCost: 'Total Cost',
   importUnitCost: 'Import Unit Cost',
+  pieceArea: "Area/Pc",
   systemPrice: 'System Price',
   shareRate: 'Share Rate',
   priceAlert: 'Price Alert',
@@ -132,6 +134,8 @@ export default {
   toRegion: 'To Region',
   copyHint: 'Existing records will not be overwritten, only missing models will be copied',
   copy: 'Copy',
+  selectRegionFirst: 'Please select a region first',
+  currentlyManaging: 'Currently managing: {region}',
 
   // UsersView
   newUser: 'New User',

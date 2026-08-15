@@ -95,11 +95,13 @@ CREATE TABLE IF NOT EXISTS invoice_items (
     cif_price DECIMAL(15,4),
     cif_total DECIMAL(15,2),
     cif_bs_total DECIMAL(15,2),
-    import_duty_vat DECIMAL(15,2),
+    import_duty DECIMAL(15,2),   -- 改名
+    vat DECIMAL(15,2),           -- 新增
     transportation DECIMAL(15,2),
     others_charge DECIMAL(15,2),
     total_cost DECIMAL(15,2),
     import_unit_cost  DECIMAL(15,4),
+    piece_area DECIMAL(15,2),
     system_price DECIMAL(15,4),
     exchange_rate DECIMAL(10,4),
     price_alert ENUM('normal','yellow','red') DEFAULT 'normal',
@@ -117,4 +119,4 @@ INSERT IGNORE INTO users (username, password_hash, user_role, can_edit_products)
 
 -- 初始地区数据
 INSERT IGNORE INTO user_regions (user_id, region)
-SELECT id, '南美' FROM users WHERE username IN ('import_input_sa', 'import_review_sa');
+SELECT id, '玻利维亚' FROM users WHERE username IN ('import_input_sa', 'import_review_sa');

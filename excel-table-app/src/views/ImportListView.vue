@@ -7,8 +7,8 @@
           <el-input v-model="filters.inv_no" :placeholder="t('search')" clearable style="width:180px" />
         </el-form-item>
         <el-form-item :label="t('region')">
-          <el-select v-model="filters.region" :placeholder="t('all')" clearable style="width:140px">
-            <el-option v-for="r in availableRegions" :key="r" :label="r" :value="r" />
+          <el-select v-model="filters.region" :placeholder="t('region')" clearable style="width:140px">
+            <el-option v-for="r in REGIONS" :key="r.value" :label="t(r.labelKey)" :value="r.value" />
           </el-select>
         </el-form-item>
         <el-form-item :label="t('invoiceDate')">
@@ -54,6 +54,7 @@ import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { request } from '@/utils/request'
+import { REGIONS, BUYERS } from '@/constants'
 
 const { t } = useI18n()
 const router = useRouter()

@@ -145,6 +145,7 @@
 import { ref, computed, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { request } from '@/utils/request'
+import { REGIONS, BUYERS } from '@/constants'
 
 const { t } = useI18n()
 
@@ -162,13 +163,7 @@ const searchUsername = ref('')
 const list = ref<any[]>([])
 const filterKeyword = ref('')
 
-const regionOptions = [
-  { value: '玻利维亚', labelKey: 'bolivia' },
-  { value: '秘鲁', labelKey: 'peru' },
-  { value: '智利', labelKey: 'chile' },
-  { value: '西班牙', labelKey: 'spain' },
-  { value: '美国', labelKey: 'usa' },
-]
+const regionOptions = REGIONS //地区列表
 
 const regionKeys: Record<string, string> = Object.fromEntries(
   regionOptions.map(r => [r.value, r.labelKey])

@@ -34,11 +34,13 @@ type ImportInvoiceItem struct {
 	CifPrice        *float64 `json:"cif_price"`
 	CifTotal        *float64 `json:"cif_total"`
 	CifBsTotal      *float64 `json:"cif_bs_total"`
-	ImportDutyVat   *float64 `json:"import_duty_vat"`
+	ImportDuty      *float64 `json:"import_duty"`
+	Vat             *float64 `json:"vat"`
 	Transportation  *float64 `json:"transportation"`
 	OthersCharge    *float64 `json:"others_charge"`
 	TotalCost       *float64 `json:"total_cost"`
 	ImportUnitCost  *float64 `json:"import_unit_cost"`
+	PieceArea       *float64 `json:"piece_area"`
 	SystemPrice     *float64 `json:"system_price"`
 	ExchangeRate    *float64 `json:"exchange_rate"`
 	PriceAlert      string   `json:"price_alert"`
@@ -259,8 +261,8 @@ func handleImportDetail(c *gin.Context) {
 		SELECT id, inv_no, invoice_type, item_no, brand, commodities, model_no,
 		carton_qty, unit_qty, unit, descriptions, export_unit_price, total_amount,
 		gross_weight, net_weight, volume, share_rate, sea_freight, cif_price,
-		cif_total, cif_bs_total, import_duty_vat, transportation, others_charge,
-		total_cost, import_unit_cost, system_price, exchange_rate, price_alert
+		cif_total, cif_bs_total, import_duty, vat, transportation, others_charge,
+		total_cost, import_unit_cost, piece_area, system_price, exchange_rate, price_alert
 		FROM invoice_items WHERE inv_no = ? AND invoice_type = 'import'
 		ORDER BY item_no
 	`, invNo)
@@ -279,8 +281,8 @@ func handleImportDetail(c *gin.Context) {
 			&item.UnitQty, &item.Unit, &item.Descriptions, &item.ExportUnitPrice,
 			&item.TotalAmount, &item.GrossWeight, &item.NetWeight, &item.Volume,
 			&item.ShareRate, &item.SeaFreight, &item.CifPrice, &item.CifTotal,
-			&item.CifBsTotal, &item.ImportDutyVat, &item.Transportation,
-			&item.OthersCharge, &item.TotalCost, &item.ImportUnitCost,
+			&item.CifBsTotal, &item.ImportDuty, &item.Vat, &item.Transportation,
+			&item.OthersCharge, &item.TotalCost, &item.ImportUnitCost, &item.PieceArea,
 			&item.SystemPrice, &item.ExchangeRate, &item.PriceAlert,
 		)
 		inv.Items = append(inv.Items, item)
@@ -380,15 +382,15 @@ func handleImportUpdate(c *gin.Context) {
 			INSERT INTO invoice_items (inv_no, invoice_type, item_no, brand, commodities,
 			model_no, carton_qty, unit_qty, unit, descriptions, export_unit_price, total_amount,
 			gross_weight, net_weight, volume, share_rate, sea_freight, cif_price,
-			cif_total, cif_bs_total, import_duty_vat, transportation, others_charge,
-			total_cost, import_unit_cost, system_price, exchange_rate, price_alert)
-			VALUES (?, 'import', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+			cif_total, cif_bs_total, import_duty, vat, transportation, others_charge,
+			total_cost, import_unit_cost, piece_area, system_price, exchange_rate, price_alert)
+			VALUES (?, 'import', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 		`, invNo, itemNo, item.Brand, item.Commodities, item.ModelNo,
 			item.CartonQty, item.UnitQty, item.Unit, item.Descriptions,
 			item.ExportUnitPrice, item.TotalAmount, item.GrossWeight, item.NetWeight, item.Volume,
 			item.ShareRate, item.SeaFreight, item.CifPrice, item.CifTotal, item.CifBsTotal,
-			item.ImportDutyVat, item.Transportation, item.OthersCharge,
-			item.TotalCost, item.ImportUnitCost, item.SystemPrice, item.ExchangeRate, priceAlert)
+			item.ImportDuty, item.Vat, item.Transportation, item.OthersCharge,
+			item.TotalCost, item.ImportUnitCost, item.PieceArea, item.SystemPrice, item.ExchangeRate, priceAlert)
 	}
 
 	c.JSON(http.StatusOK, gin.H{"message": "更新成功"})
@@ -493,15 +495,15 @@ func handleImportCreate(c *gin.Context) {
 			INSERT INTO invoice_items (inv_no, invoice_type, item_no, brand, commodities,
 			model_no, carton_qty, unit_qty, unit, descriptions, export_unit_price, total_amount,
 			gross_weight, net_weight, volume, share_rate, sea_freight, cif_price,
-			cif_total, cif_bs_total, import_duty_vat, transportation, others_charge,
-			total_cost, import_unit_cost, system_price, exchange_rate, price_alert)
-			VALUES (?, 'import', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+			cif_total, cif_bs_total, import_duty, vat, transportation, others_charge,
+			total_cost, import_unit_cost, piece_area, system_price, exchange_rate, price_alert)
+			VALUES (?, 'import', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 		`, inv.InvNo, itemNo, item.Brand, item.Commodities, item.ModelNo,
 			item.CartonQty, item.UnitQty, item.Unit, item.Descriptions,
 			item.ExportUnitPrice, item.TotalAmount, item.GrossWeight, item.NetWeight, item.Volume,
 			item.ShareRate, item.SeaFreight, item.CifPrice, item.CifTotal, item.CifBsTotal,
-			item.ImportDutyVat, item.Transportation, item.OthersCharge,
-			item.TotalCost, item.ImportUnitCost, item.SystemPrice, item.ExchangeRate, priceAlert)
+			item.ImportDuty, item.Vat, item.Transportation, item.OthersCharge,
+			item.TotalCost, item.ImportUnitCost, item.PieceArea, item.SystemPrice, item.ExchangeRate, priceAlert)
 	}
 
 	logger.Info("handleImportCreate 创建成功", "inv_no", inv.InvNo)

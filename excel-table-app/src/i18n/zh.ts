@@ -92,11 +92,13 @@ export default {
   cifPrice: 'CIF单价',
   cifTotal: 'CIF总额',
   cifBsTotal: 'CIF本位币总额',
-  importDutyVat: '关税/增值税',
+  importDuty: '关税',
+  vat: '增值税',
   transportation: '本地运费',
   othersCharge: '其他费用',
   totalCost: '总成本',
   importUnitCost: '进口单位成本',
+  pieceArea: "单片面积",
   systemPrice: '系统价格',
   shareRate: '分摊比例',
   priceAlert: '价格预警',
@@ -131,6 +133,8 @@ export default {
   toRegion: '目标地区',
   copyHint: '已存在的记录不会被覆盖，只复制目标地区缺少的型号',
   copy: '复制',
+  selectRegionFirst: '请先选择要管理的地区',
+  currentlyManaging: '当前正在管理：{region}',
 
   // UsersView
   newUser: '新增用户',

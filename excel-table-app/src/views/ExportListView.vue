@@ -2,37 +2,16 @@
   <div>
     <!-- 搜索栏 -->
     <div class="search-bar">
-      <el-input
-        v-model="searchInvNo"
-        :placeholder="t('searchInvNo')"
-        style="width: 200px"
-        clearable
-        @clear="fetchList"
-        @keyup.enter="fetchList"
-      />
+      <el-input v-model="searchInvNo" :placeholder="t('searchInvNo')" style="width: 200px" clearable @clear="fetchList"
+        @keyup.enter="fetchList" />
       <el-select v-model="searchRegion" :placeholder="t('region')" clearable style="width:140px">
-        <el-option :label="t('bolivia')" value="玻利维亚" />
-        <el-option :label="t('peru')" value="秘鲁" />
-        <el-option :label="t('chile')" value="智利" />
-        <el-option :label="t('spain')" value="西班牙" />
-        <el-option :label="t('usa')" value="美国" />
+        <el-option v-for="r in REGIONS" :key="r.value" :label="t(r.labelKey)" :value="r.value" />
       </el-select>
-      <el-date-picker
-        v-model="dateRange"
-        type="daterange"
-        range-separator="~"
-        :start-placeholder="t('startDate')"
-        :end-placeholder="t('endDate')"
-        value-format="YYYY-MM-DD"
-        style="width: 260px"
-      />
+      <el-date-picker v-model="dateRange" type="daterange" range-separator="~" :start-placeholder="t('startDate')"
+        :end-placeholder="t('endDate')" value-format="YYYY-MM-DD" style="width: 260px" />
       <el-button type="primary" @click="fetchList">{{ t('search') }}</el-button>
       <el-button @click="resetSearch">{{ t('reset') }}</el-button>
-      <el-button
-        type="success"
-        @click="goCreate"
-        v-if="canCreate"
-      >{{ t('newInvoice') }}</el-button>
+      <el-button type="success" @click="goCreate" v-if="canCreate">{{ t('newInvoice') }}</el-button>
     </div>
 
     <!-- 表格 -->
@@ -45,7 +24,7 @@
       <el-table-column :label="t('reviewStatus')" width="100">
         <template #default="{ row }">
           <el-tag :type="row.reviewed ? 'success' : 'warning'">
-            {{ row.reviewed ? t('reviewed'): t('pending') }}
+            {{ row.reviewed ? t('reviewed') : t('pending') }}
           </el-tag>
         </template>
       </el-table-column>
@@ -71,6 +50,7 @@ import { useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 //import { ElMessage } from 'element-plus' //会与unplugin-auto-import存在重复导入的冲突，导致提示框无法正确渲染，所以注释掉
 import { request } from '@/utils/request'
+import { REGIONS, BUYERS } from '@/constants'
 
 const { t } = useI18n()
 

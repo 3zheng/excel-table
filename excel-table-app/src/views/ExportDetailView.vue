@@ -26,11 +26,7 @@
           <el-col :span="8">
             <el-form-item :label="t('region')">
               <el-select v-model="invoice.region" :placeholder="t('region')" style="width:100%">
-                <el-option :label="t('bolivia')" value="玻利维亚" />
-                <el-option :label="t('peru')" value="秘鲁" />
-                <el-option :label="t('chile')" value="智利" />
-                <el-option :label="t('spain')" value="西班牙" />
-                <el-option :label="t('usa')" value="美国" />
+                <el-option v-for="r in REGIONS" :key="r.value" :label="t(r.labelKey)" :value="r.value" />
               </el-select>
             </el-form-item>
           </el-col>
@@ -77,7 +73,10 @@
           </el-col>
           <el-col :span="8">
             <el-form-item :label="t('buyerName')">
-              <el-input v-model="invoice.buyer_name" />
+              <el-select v-model="invoice.buyer_name" filterable allow-create default-first-option
+                :placeholder="t('buyerName')" style="width:100%" @change="onBuyerChange">
+                <el-option v-for="b in BUYERS" :key="b.name" :label="b.name" :value="b.name" />
+              </el-select>
             </el-form-item>
           </el-col>
           <el-col :span="8">
@@ -170,21 +169,21 @@
         <!-- 箱数 -->
         <el-table-column :label="t('cartonQty')" prop="carton_qty" width="90">
           <template #default="{ row, $index }">
-            <el-input-number v-model="row.carton_qty" size="small" :min="0" style="width:100%" :disabled="!canEdit"
+            <el-input-number v-model="row.carton_qty" size="small" :min="0" :value-on-clear="undefined" style="width:100%" :disabled="!canEdit"
               :controls="false" @change="onQtyChange(row, $index)" />
           </template>
         </el-table-column>
         <!-- 每箱货物数（新增） -->
         <el-table-column :label="t('qtyPerCarton')" prop="qty_per_carton" width="100">
           <template #default="{ row, $index }">
-            <el-input-number v-model="row.qty_per_carton" size="small" :min="0" style="width:100%" :disabled="!canEdit"
+            <el-input-number v-model="row.qty_per_carton" size="small" :min="0" :value-on-clear="undefined" style="width:100%" :disabled="!canEdit"
               :controls="false" @change="onQtyChange(row, $index)" />
           </template>
         </el-table-column>
         <!-- 总货物量（受手动覆盖控制） -->
         <el-table-column :label="t('unitQty')" prop="unit_qty" width="100">
           <template #default="{ row, $index }">
-            <el-input-number v-model="row.unit_qty" size="small" :min="0" style="width:100%"
+            <el-input-number v-model="row.unit_qty" size="small" :min="0" :value-on-clear="undefined" style="width:100%"
               :disabled="!canEdit || !manualOverride[$index]" :controls="false" />
           </template>
         </el-table-column>
@@ -196,32 +195,32 @@
         <!-- 单价 -->
         <el-table-column :label="t('unitPrice')" prop="export_unit_price" width="100">
           <template #default="{ row, $index }">
-            <el-input-number v-model="row.export_unit_price" size="small" :min="0" :precision="3" style="width:100%"
+            <el-input-number v-model="row.export_unit_price" size="small" :min="0" :value-on-clear="undefined" :precision="3" style="width:100%"
               :disabled="!canEdit" :controls="false" @change="onQtyChange(row, $index)" />
           </template>
         </el-table-column>
         <!-- 总金额（受手动覆盖控制） -->
         <el-table-column :label="t('totalAmount')" prop="total_amount" width="100">
           <template #default="{ row, $index }">
-            <el-input-number v-model="row.total_amount" size="small" :min="0" :precision="2" style="width:100%"
+            <el-input-number v-model="row.total_amount" size="small" :min="0" :value-on-clear="undefined" :precision="2" style="width:100%"
               :disabled="!canEdit || !manualOverride[$index]" :controls="false" />
           </template>
         </el-table-column>
         <el-table-column :label="t('grossWeight')" prop="gross_weight" width="90">
           <template #default="{ row }">
-            <el-input-number v-model="row.gross_weight" size="small" :min="0" :precision="2" style="width:100%"
+            <el-input-number v-model="row.gross_weight" size="small" :min="0" :value-on-clear="undefined" :precision="2" style="width:100%"
               :disabled="!canEdit" :controls="false" />
           </template>
         </el-table-column>
         <el-table-column :label="t('netWeight')" prop="net_weight" width="90">
           <template #default="{ row }">
-            <el-input-number v-model="row.net_weight" size="small" :min="0" :precision="2" style="width:100%"
+            <el-input-number v-model="row.net_weight" size="small" :min="0" :value-on-clear="undefined" :precision="2" style="width:100%"
               :disabled="!canEdit" :controls="false" />
           </template>
         </el-table-column>
         <el-table-column :label="t('volume')" prop="volume" width="90">
           <template #default="{ row }">
-            <el-input-number v-model="row.volume" size="small" :min="0" :precision="2" style="width:100%"
+            <el-input-number v-model="row.volume" size="small" :min="0" :value-on-clear="undefined" :precision="2" style="width:100%"
               :disabled="!canEdit" :controls="false" />
           </template>
         </el-table-column>
@@ -269,6 +268,7 @@ import { useRouter, useRoute } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { request } from '@/utils/request'
 import { useCtrlS } from '@/composables/useCtrlS'
+import { REGIONS, BUYERS } from '@/constants'
 
 const { t } = useI18n()
 const router = useRouter()
@@ -301,7 +301,7 @@ const invoice = ref({
   buyer_tel: '',
   seller_name: '',
   payment_term: '',
-  fob_total: 0,
+  fob_total: undefined,
   reviewed: false,
   reviewer: '',
   review_comment: '',
@@ -311,6 +311,14 @@ const invoice = ref({
 function onDateChange(val: string | null) {
   console.log('[日期排查] date-picker @change 收到:', val, '类型:', typeof val)
   console.log('[日期排查] 当前 invoice.invoice_date:', invoice.value.invoice_date)
+}
+
+const onBuyerChange = (name: string) => {
+  const buyer = BUYERS.find(b => b.name === name)
+  if (buyer) {
+    invoice.value.buyer_address = buyer.address
+    invoice.value.buyer_tel = buyer.tel
+  }
 }
 
 // 记录哪些行开启了手动覆盖（key 为行索引）
@@ -328,12 +336,23 @@ const toggleOverride = (index: number) => {
 }
 
 const calcItem = (row: any) => {
-  const carton = Number(row.carton_qty) || 0
-  const perCarton = Number(row.qty_per_carton) || 0
-  const price = Number(row.export_unit_price) || 0
+  const carton = row.carton_qty
+  const perCarton = row.qty_per_carton
+  const price = row.export_unit_price
 
-  row.unit_qty = carton * perCarton
-  row.total_amount = +(row.unit_qty * price).toFixed(2)
+  // 只有箱数和每箱数量都有值（且非 null/undefined）时才自动计算总数量
+  if (carton !== undefined && carton !== null && perCarton !== undefined && perCarton !== null) {
+    row.unit_qty = Number(carton) * Number(perCarton)
+  } else {
+    row.unit_qty = undefined
+  }
+
+  // 只有总数量和单价都有值时才计算总金额
+  if (row.unit_qty !== undefined && row.unit_qty !== null && price !== undefined && price !== null) {
+    row.total_amount = +(Number(row.unit_qty) * Number(price)).toFixed(2)
+  } else {
+    row.total_amount = undefined
+  }
 }
 
 const onQtyChange = (row: any, index: number) => {
@@ -376,9 +395,9 @@ const getRowClass = ({ row }: { row: any }) => {
 const addItem = () => {
   invoice.value.items.push({
     brand: '', commodities: '', model_no: '', descriptions: '',
-    carton_qty: 0, qty_per_carton: 0, unit_qty: 0, unit: '',
-    export_unit_price: 0, total_amount: 0,
-    gross_weight: 0, net_weight: 0, volume: 0,
+    carton_qty: undefined, qty_per_carton: undefined, unit_qty: undefined, unit: '',
+    export_unit_price: undefined, total_amount: undefined,
+    gross_weight: undefined, net_weight: undefined, volume: undefined,
   })
 }
 
@@ -404,7 +423,19 @@ const saveInvoice = async () => {
     ...invoice.value,
     invoice_date: invoice.value.invoice_date
       ? invoice.value.invoice_date.slice(0, 10)
-      : null
+      : null,
+      // 提交前统一将 undefined 转换为 0 传给后端
+    items: invoice.value.items.map(item => ({
+      ...item,
+      carton_qty: item.carton_qty ?? 0,
+      qty_per_carton: item.qty_per_carton ?? 0,
+      unit_qty: item.unit_qty ?? 0,
+      export_unit_price: item.export_unit_price ?? 0,
+      total_amount: item.total_amount ?? 0,
+      gross_weight: item.gross_weight ?? 0,
+      net_weight: item.net_weight ?? 0,
+      volume: item.volume ?? 0,
+    })),
   }
   try {
     const method = isNew.value ? 'POST' : 'PUT'
